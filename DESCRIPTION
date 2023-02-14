@@ -1,8 +1,8 @@
 Package: morph
 Type: Package
 Title: 3D Segmentation of Voxels into Morphologic Classes
-Version: 1.0.0
-Date: 2021-11-25
+Version: 1.1.0
+Date: 2023-02-14
 Authors@R: c(
   person("Tarmo K.", "Remmel", email = "remmelt@yorku.ca", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-6251-876X")))
 Maintainer: Tarmo K. Remmel <remmelt@yorku.ca>
@@ -13,6 +13,6 @@ LazyDataCompression: xz
 Depends: R (>= 4.1.0), rgl, reshape2, igraph, stringr
 NeedsCompilation: no
 Repository: CRAN
-Packaged: 2021-12-09 16:13:51 UTC; tarmo
+Packaged: 2023-02-14 15:25:34 UTC; tarmo
 Author: Tarmo K. Remmel [aut, cre] (<https://orcid.org/0000-0001-6251-876X>)
-Date/Publication: 2021-12-10 15:10:02 UTC
+Date/Publication: 2023-02-14 15:40:02 UTC

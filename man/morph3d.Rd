@@ -53,7 +53,7 @@ The function returns a LIST object with the following items:
 }
 
 \references{
-Remmel, T.K. (Accepted December 2021). Extending morphological pattern segmentation to 3D voxels. Landscape Ecology.
+Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380.
 }
 
 \author{

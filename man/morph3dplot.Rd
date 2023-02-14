@@ -38,7 +38,7 @@ The output is an interactive 3D rgl plot of the voxels supplied as input. Morpho
 }
 
 \references{
-Remmel, T.K. 2021. (Unpuplished manuscript)
+Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380.
 }
 
 \author{

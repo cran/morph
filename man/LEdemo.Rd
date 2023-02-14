@@ -20,7 +20,7 @@ This data was produced by the author of the package for demonstration purposes a
 }
 
 \references{
-Remmel, T.K. 2021. (Unpublished manuscript)
+Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380.
 }
 
 \examples{

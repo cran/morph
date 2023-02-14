@@ -33,7 +33,7 @@ This function returns an intermediate data frame of voxel neighbours that is sub
 }
 
 \references{
-No references at this time.
+Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380.
 }
 
 \author{
