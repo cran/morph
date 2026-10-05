@@ -1,5 +1,5 @@
-morph3dprep <-
-function(INCUBE=NULL, ORIG=FALSE) {
+
+morph3dprep <- function(INCUBE=NULL, ORIG=FALSE) {
 
   #--------------------------------------------------------------
   #
@@ -51,3 +51,4 @@ function(INCUBE=NULL, ORIG=FALSE) {
   return(cubexyz)
 
 } # END FUNCTION: morph3dprep
+

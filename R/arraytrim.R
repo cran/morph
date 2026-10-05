@@ -1,5 +1,4 @@
-arraytrim <-
-function(VOLOBJ=NULL) {
+arraytrim <- function(VOLOBJ=NULL) {
 
   #--------------------------------------------------------------
   #
@@ -136,5 +135,4 @@ function(VOLOBJ=NULL) {
   return(VOLOBJ[xindexlow:xindexhigh, yindexlow:yindexhigh, zindexlow:zindexhigh])
 
   } # END FUNCTION: arraytrim
-
 

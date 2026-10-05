@@ -29,13 +29,14 @@ This is a Boolean flag that turns on | off 3D interactive environment plots for 
   \item{FINALPLOT}{
 This is a Boolean flag that turns on | off the 3D interactive environment plot for the final voxel segmentation result. If this is set to FALSE, it can readily be plotted in the future, since the results are saved by the function to a compound list object and the plotting function is supplied with this package.
 }
+
   \item{PLOTIDS}{
 This is a Boolean flag that turns on | off the plotting of unique voxel IDS at the centroids of each voxel during plotting. These can be very useful for identifying specific voxels and associations, but can also clutter the view if they are not expressly required.
 }
 }
 
 \details{
-Each voxel can belong to only a single 3D morphological class. The concept expands the planar morphological segmentation avaliable in the MSPA software package and establishes corresponding terminology to distinguish the 3D case. The processessing logic is presented and a fully-functional environment allows any binary 3D data to be processed with this engine.}
+Each voxel can belong to only a single 3D morphological class. The concept expands the planar morphological segmentation avaliable in the MSPA software package and establishes corresponding terminology to distinguish the 3D case. The processessing logic is presented and a fully-functional environment allows any binary 3D data to be processed with this engine. This tool is currenlty limited by dataset size, where processing can take a very long time and produce strange artifacts. This is something that is actively being worked on and a Python library has been released to offer alternatives and mitigate some of this concern. I hope to optimize this R package for a new relesase in the future that alleviates this limitation.}
 
 \value{
 The function returns a LIST object with the following items:
@@ -53,7 +54,7 @@ The function returns a LIST object with the following items:
 }
 
 \references{
-Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380.
+Remmel, T.K. 2022. Extending morphological pattern analysis to 3D voxels. Landscape Ecology 37(2):373-380. [DOI: 10.1007/s10980-021-01384-7]
 }
 
 \author{

@@ -18,7 +18,9 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{morph}
 \packageIndices{morph}
-This package handles the segmentation of binary voxel data, provided as a numeric 3D array, into its constituent morphological classes. Each voxel is assigned to one of nine mutually exclusive morpholocal classes: outside, mass, skin, crumb, circuit, antenna, bond, void-volume, or void.
+This package handles the segmentation of binary voxel data, provided as a numeric 3D array, into its constituent morphological classes. Each voxel is assigned to one of nine mutually exclusive morpholocal classes: OUTSIDE, MASS, SKIN, CRUMB, CIRCUIT, ANTENNA, BOND, VOID-SKIN, or VOID-VOLUME.
+
+The current version of morph 2.0.0 is a substantial update to the original release. While the ole functions remain, their use is discouraged. The new version is simpler, cleaner, more adaptable, but maintains consistency in result codes produced. The intent is to retire the original functions in the next release, and to have the current functions persist. The first function is runmorph3d() which processes an input 3D array (representing voxels), to produce a 3D morphological segmentation. The results are stored in a standardized cartridge (a list of objects) that can subsequnetly be passed to plotmorph3d() to handle a wide range of plotting functionality.
 }
 
 \author{

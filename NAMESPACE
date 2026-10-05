@@ -1,6 +1,6 @@
-export("morph3d", "morph3dplot", "morph3dprep", "arraytrim")
+export("runmorph3d", "plotmorph3d", "morph3d", "morph3dplot", "morph3dlinks", "morph3dprep", "arraytrim")
 importFrom("reshape2", "melt")
-importFrom("rgl", "clear3d", "bg3d", "cube3d", "shade3d", "wire3d", "legend3d", "text3d", "open3d", "bgplot3d", "par3d")
+importFrom("rgl", "clear3d", "bg3d", "cube3d", "shade3d", "wire3d", "legend3d", "text3d", "open3d", "bgplot3d", "par3d", "quads3d", "segments3d", "aspect3d", "axes3d", "title3d", "box3d")
 importFrom("graphics", "plot.new", "title")
 importFrom("utils", "install.packages")
 importFrom("graphics", "par")

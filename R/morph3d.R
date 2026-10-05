@@ -1,18 +1,26 @@
-morph3d <-
-function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE) {
+
+morph3d <- function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE) {
 
   #--------------------------------------------------------------
   #
   # TITLE:     morph3d()
   # FILENAME:  morph3d_Final.R
   # AUTHOR:    TARMO K REMMEL
-  # DATE:      15 November 2021 @ 1132h
+  # DATE:      2 October 2026 @ 1013h (Tartu)
   # CALLS:
   # CALLED BY:
   # NEEDS:     igraph, stringr, rgl
   # NOTES:     NOTE, INPUT DATA IS AS FOLLOWS:
-  #  DATACUBE MUST BE A 3D ARRAY OF (0,1) WHERE 1 IS THE OBJECT OF INTEREST AND 0 IS NOT
-  # IS.ARRAY = TRUE, IS.NUMERIC = TRUE
+  #            DATACUBE MUST BE A 3D ARRAY OF (0,1) WHERE 1 IS THE OBJECT OF INTEREST AND 0 IS NOT
+  #            IS.ARRAY = TRUE, IS.NUMERIC = TRUE
+  #
+  #            THIS UPDATE (1 OCT 2026) MAKES OUTPUTS WINDOWS LARGER
+  #            THERE SEEMS TO BE A BUG WITH VOID & VOID VOLUMNE THAT NEEDS TO BE CHECKED
+  #            IDEAS: CAN THE OUTPUT CARTRIDGE BE USED TO CREATE PLOTS LATER? A FUNCITON FOR THIS WOULD BE USEFUL
+  #            IDEAS: TOGGLE ON|OFF HANDLING OF INTERNAL VOID & VOID-VOLUMNE AS DIFFERENT FROM SKIN & OUTSIDE
+  #
+  #            morph3dnew(LEdemo, PLOT=TRUE, PLOTIDS=FALSE)
+  #            morph3dnew(LEdemo, PLOT=TRUE, PLOTIDS=TRUE)
   #
   # ARGS:      DATACUBE = A 3D array with categories representing a
   #            a binary feature that is to be processed. This needs to
@@ -22,75 +30,94 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   #            provided on screen as the script runs, and FALSE when
   #            to run in quiet mode).
   #
+  #            PLOTIDS = Boolean. Set to TRUE if you want voxelID values
+  #            to appear on plots. The default is FALSE as it gets quite busy and distracting.
+  #            Best turned on for learning and debugging.
+  #
   #--------------------------------------------------------------
     
-  # CHECK THAT INPUT DATA IS 0,1 (BINARY) 3D NUMERIC ARRAY DATA
   
-  # ** UPDATE: ADD CHECK THAT THERE ARE AT LEAST 2 VOXELS OF DATA (I.E., A SINGLE VOXEL CRUMB CAUSES A PROBLEM)
   
-  if(is.numeric(DATACUBE)) {
-    if(is.array(DATACUBE)) {
-      if(length(dim(DATACUBE)) == 3) {
-        if(all(as.integer(names(table(DATACUBE))) %in% c(0,1))) {
-          message("\n\nInput data passess all initial checks for integrity.\n\n")
-        } else {
-          warning("\n\nERROR 004 - Input data does not contain proper 0,1 binary data.\n\n")
-          return(NULL)
-        }
-      } else {
-        warning("\n\nERROR 003 - Input data is not a 3D array.\n\n")
-        return(NULL)
-      }
-    } else {
-      warning("\n\nERROR 002 - Input data is not an array.\n\n")
-      return(NULL)
-    }
-  } else {
-    warning("\n\nERROR 001 - Input data is not numeric.\n\n")
-    return(NULL)
-  }
-   
-   
+  
   # DEFINE A HELPER FUNCTION
   `%notin%` <- Negate(`%in%`)
   
+  
+  
+  
+  # ===== START: INPUT DATA INTEGRITY CHECKS =====
+  # CHECK THAT INPUT DATA IS NUMERIC
+  if(!is.numeric(DATACUBE)) {
+    warning("\n\nERROR 001 - Input data is not numeric.\n\n")
+    return(NULL)
+  }
+  # CHECK THAT INPUT DATA IS AN ARRAY
+  if(!is.array(DATACUBE)) {
+    warning("\n\nERROR 002 - Input data is not an array.\n\n")
+    return(NULL)
+  }
+  # CHECK THAT INPUT DATA IS A 3D ARRAY
+  if(length(dim(DATACUBE)) != 3) {
+    warning("\n\nERROR 003 - Input data is not a 3D array.\n\n")
+    return(NULL)
+  }
+  # CHECK THAT INPUT DATA IS 0,1 (BINARY) 3D NUMERIC ARRAY DATA
+  if(all(as.integer(names(table(DATACUBE))) %notin% c(0,1))) {
+    warning("\n\nERROR 004 - Input data does not contain proper 0,1 binary data.\n\n")
+    return(NULL)
+  }
+  # CHECK THAT INPUT DATA HAS AT LEAST 2 VOXELS
+  if(sum(DATACUBE) < 2) {
+    warning("\n\nERROR 005 - Need more than 1 voxel for class of interest.\n\n")
+    return(NULL)
+  }
+  message("\n\nInput data passess all initial checks for integrity.\n\n")
+  # ===== END: INPUT DATA INTEGRITY CHECKS =====
+
+  
+  
+  
+  # ===== START: PERFORM PADDING =====
   if(VERBOSE) {
   	cat("\nInsetting 3D data cube into a larger array to handle edge effects")
   } # END IF
+  
   # STORE THE DIMENSIONS OF THE INPUT DATA CUBE
   dimdatacube <- dim(DATACUBE)
-
   # MAKE A LARGER DATA CUBE AND INSET THE ORIGINAL DATA CUBE INTO IT SUCH THAT THERE
   # ARE 0 VALUES ON ALL CUBE MARGINS TO CONTAIN THE DATA
-  lrgdatacube <- array(data=0, dim=c(dimdatacube[1]+2, dimdatacube[2]+2, dimdatacube[3]+2))
+  paddedcubes <- cubepadding(INCUBE=DATACUBE)
+  lrgdatacube <- paddedcubes[[1]]
+  lrgdatacube2 <- paddedcubes[[2]]
   # MAKE A SECOND LARGEER DATA CUBE FOR SEPARATING SKIN FROM VOID LATER AND FILL IT WITH -1 RATHER THAN 0
-  lrgdatacube2 <- lrgdatacube - 1
-  # PERFORM INSETS
-  lrgdatacube[2:(dimdatacube[1]+1),2:(dimdatacube[2]+1),2:(dimdatacube[3]+1)] <- DATACUBE
-  #lrgdatacube
-  lrgdatacube2[2:(dimdatacube[1]+1),2:(dimdatacube[2]+1),2:(dimdatacube[3]+1)] <- DATACUBE
-  #print(lrgdatacube2)
+  # ===== END: PERFORM PADDING =====
   
-  # PERFORM INITIALIZATIONS
+  
+
+  
+  # ===== START: INITIALIZE ARRAYS =====
   if(VERBOSE) {
   	cat("\n\nPerforming initializations of: voxelID, objectID, coreCode, and morphCode arrays")
   } # END IF
+  
+  initializations <- initializearrays(INCUBE=DATACUBE)
   # BUILD AN ARRAY FOR HOLDING THE INDEX OF VOXELS IDS
-  voxelID <- array(data=1:prod(dim(DATACUBE)), dim=c(dimdatacube[1],dimdatacube[2],dimdatacube[3]))
-  
+  voxelID <- initializations$voxelID
   # INITIATE AN ARRAY FOR HOLDING UNIQUE OBJECT IDS
-  objectID <- voxelID * 0
-
+  objectID <- initializations$objectID
   # INITIATE AN ARRAY FOR HOLDING MASS-CORE CODES
-  coreCode <- objectID * 0
-  
+  coreCode <- initializations$coreCode
   # INITIATE AN ARRAY FOR HOLDING EXPANDED CORE CODES
-  expandedCoreCode <- coreCode
-  
+  expandedCoreCode <- initializations$coreCode
   # INITIATE AN ARRAY FOR HOLDING MORPHOLOGY CODES
-  morphCode <- objectID
+  morphCode <- initializations$morphCode
+  # ===== START: INITIALIZE ARRAYS =====
 
-  # COMPUTE NEIGHBOURS
+  
+
+
+  
+  # ===== START: COMPUTE NEIGHBOURS AND DISCRETE OBJECTS =====
   if(VERBOSE) {
     cat("\nComputing neighbours")
   }
@@ -115,19 +142,23 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   if(VERBOSE) {
     cat("\n  Generating network graph object")
   }
+  
   maingraph <- graph_from_data_frame(newneighbourtab, directed=FALSE)
 
   # REMOVE THE EDGE SPLIT
   if("0" %in% names(V(maingraph))) {
     cutgraph <- delete_vertices(maingraph, "0")
-  }
-  else {
+  } else {
     # FOR NOW, IF THERE IS NO "0" VERTEX TO REMOVE, JUST COPY THE maingraph INTO THE INTO cutgraph AND CONTINUE ON
     cutgraph <- maingraph
   } # END IF-ELSE
-    
+  
+  
+  
   # DECOMPOSE THE cutgraph INTO A LIST OF AS MANY GRAPHS AS THERE EXIST IN THE STRUCTURE
   decompgraph <- decompose(cutgraph)
+  
+  
   if(VERBOSE) {
     cat("\n  There are", length(decompgraph), "discrete objects in this graph", sep=" ")
   }
@@ -148,17 +179,27 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     } # END FOR: vox
   } # END FOR: uq
 
+  
+  #objectID <- label_objects_3d(DATACUBE)
+
+  
   if(PLOT) {
     # THIS IS A PLOT OF THE DISCRETE OBJECTS
     origclust <- morph3dprep(objectID, ORIG=TRUE)
-    # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
-    open3d()
-    morph3dplot(origclust, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    # CELLABELS IS AN ARRAY WITH THE VOXEL ID LABELS TO ADD TO THE PLOT IF PLOTIDS IS TRUE
+    open3d() #PLOTIDS
+    morph3dplot(origclust, CELLID=PLOTIDS, LEGEND=TRUE, ORIGTRANSP=TRUE, CELLLABELS=objectID)
     bgplot3d({
       plot.new()
       title(main = 'Object IDs', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT DISCRETE OBJECT CODES
+
+  # ===== END: COMPUTE NEIGHBOURS AND DISCRETE OBJECTS =====
+  
+  
 
   
   # ------------ MASS (CODE = 2) ------------
@@ -200,11 +241,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=FALSE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=FALSE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'MASS Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT MASS VOXELS
 
   
@@ -311,11 +354,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=FALSE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=FALSE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'CRUMB Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE MORPHOLOGY WITH CRUMBS
 
   
@@ -681,11 +726,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph)
     bgplot3d({
       plot.new()
       title(main = 'Expanded CORE Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE MORPHOLOGY WITH ANTENNAE
 
   
@@ -928,11 +975,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'ANTENNA Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE MORPHOLOGY WITH ANTENNAE
   
   if(PLOT) {
@@ -943,11 +992,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'BOND Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE MORPHOLOGY WITH ANTENNAE
 
   
@@ -959,11 +1010,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'CIRCUIT Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE MORPHOLOGY WITH CIRCUITS
   
   
@@ -977,16 +1030,12 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   # NOTE THAT THE lrgdatacube2 IS A LARGER 3D ARRAY FILLED WITH -1
   
   # FLOOD FILL WITH -1 WHERE OUTSIDE THE SHAPE
-  voidvolume <- lrgdatacube2
-  for(row in 2:(dimdatacube[1]+1)) {
-      for(col in 2:(dimdatacube[2]+1)) {
-         for(z in 2:(dimdatacube[3]+1)) {
-             if(voidvolume[row,col,z]==0 & ( voidvolume[(row+1),col,z] == -1 | voidvolume[(row-1),col,z] == -1 | voidvolume[row,(col+1),z] == -1 | voidvolume[row,(col-1),z] == -1 | voidvolume[row,col,(z+1)] == -1 | voidvolume[row,col,(z-1)] == -1 ) ) {
-                 voidvolume[row,col,z] <- -1
-             }
-         }
-      }
-  }
+  voidvolume <- lrgdatacube
+  
+
+  # I THINK THAT THE ISSUE WITH MY CODE IS HERE IN THE FLOOD-FILL, AND IT NOT WORKING PROPERLY.
+  voidvolume <- flood_fill_3d(lrgdatacube)
+  
   # SUBSET IT BACK TO PROPER SIZE
   voidvolume <- voidvolume[2:(dimdatacube[1]+1),2:(dimdatacube[2]+1),2:(dimdatacube[3]+1)]
   VOIDvolumeVoxels <- voxelID[voidvolume==0]
@@ -998,17 +1047,20 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   # NEED TO CHECK THE ADJACENCY OF SKIN OR CONNECTORS TO 0 OR -1 TO DECIDE BETWEEN VOID AND SKIN RESPECTIVELY
   # THIS WILL BE CODE=9 FOR VOID IN THE NEXT SECTION
    
+   
   if(PLOT) {
     plotmorph <- morphCode
     plotmorph[plotmorph!=8] <- 0
     plotmorph[plotmorph==8] <- 7
     morphs <- morph3dprep(plotmorph, ORIG=TRUE)
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
     bgplot3d({
       plot.new()
       title(main = 'VOID-VOLUME Voxels', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT
  
  
@@ -1021,7 +1073,7 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   # INSERT INTO LARGER GRID TO DO THIS PROPERLY SO THAT WE DO NOT EXCEED EXTENTS
   lrgmorphCode <- array(data=1, dim=c(dimdatacube[1]+2, dimdatacube[2]+2, dimdatacube[3]+2))
   lrgmorphCode[2:(dimdatacube[1]+1),2:(dimdatacube[2]+1),2:(dimdatacube[3]+1)] <- morphCode
-  
+
   # IF A VOID-VOLUME VOXEL NEIGHBOURS A VOXEL CODED AS SKIN, RECODE IT TO 9 FOR VOID
   # THIS CONVERTS SKIN TO VOID WHERE THE "EDGES" ARE INTERNAL
   for(row in 2:(dimdatacube[1]+1)) {
@@ -1057,11 +1109,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
    plotmorph[plotmorph==9] <- 8
    morphs <- morph3dprep(plotmorph, ORIG=TRUE)
    open3d()
-   morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+   morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
    bgplot3d({
      plot.new()
      title(main = 'VOID Voxels', line = 3)
    }) # END BGPLOT3D
+   # FORCE OUTPUT WINDOW SIZE
+   par3d(windowRect = c(50,50,850,850))
  } # END IF: PLOT
  
  
@@ -1071,11 +1125,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
    plotmorph[plotmorph==3] <- 2
    morphs <- morph3dprep(plotmorph, ORIG=TRUE)
    open3d()
-   morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+   morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=plotmorph+1)
    bgplot3d({
      plot.new()
      title(main = 'SKIN Voxels', line = 3)
    }) # END BGPLOT3D
+   # FORCE OUTPUT WINDOW SIZE
+   par3d(windowRect = c(50,50,850,850))
  } # END IF: PLOT
   
  
@@ -1114,11 +1170,13 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
     morphs <- morph3dprep(morphCode, ORIG=FALSE)
     # NEED TO FIX THE CELLID TO PLOT THE UNIQUE CLUSTER IDS
     open3d()
-    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE)
+    morph3dplot(morphs, CELLID=PLOTIDS, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=morphCode)
     bgplot3d({
       plot.new()
       title(main = '3D Morphology', line = 3)
     }) # END BGPLOT3D
+    # FORCE OUTPUT WINDOW SIZE
+    par3d(windowRect = c(50,50,850,850))
   } # END IF: PLOT THE FINAL MORPHOLOGY
     
   # BUILD A LIST OBJECT TO RETURN THE INPUT, VOXEL IDS, MORPHOLOGY, AND OBJECT IDENTIFIERS, SUMMARY STATS
@@ -1127,4 +1185,4 @@ function(DATACUBE=NULL, VERBOSE=FALSE, PLOT=FALSE, FINALPLOT=TRUE, PLOTIDS=FALSE
   # RETURN THE SEGMENTATION AND SUMMARIES
   return(outobj)
   
-}
+} # END FUNCTION: morph3d

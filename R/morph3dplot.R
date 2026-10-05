@@ -1,12 +1,11 @@
-morph3dplot <-
-function(data=NULL, CELLID=TRUE, LEGEND=FALSE, ORIGTRANSP=TRUE) {
+morph3dplot <- function(data=NULL, CELLID=FALSE, LEGEND=FALSE, ORIGTRANSP=TRUE, CELLLABELS=NULL) {
 
   #--------------------------------------------------------------
   #
   # TITLE:     morph3dplot()
   # FILENAME:  morph3d_Final.r
   # AUTHOR:    TARMO K REMMEL
-  # DATE:      14 February 2023
+  # DATE:      2 October 2026
   # CALLS:     clear3d, bg3d, cube3d, shade3d, wire3d, legend3d
   # CALLED BY: NA
   # NEEDS:     rgl
@@ -110,7 +109,9 @@ function(data=NULL, CELLID=TRUE, LEGEND=FALSE, ORIGTRANSP=TRUE) {
     alph <- data[,4]
     alph[alph==1] <- 0.01
     alph[alph>0.01] <- 0.9
-    text3d(coords+0.5, texts=seq(1:prod(dim(data))), cex=0.75, col=txtcolor, alpha=alph)
+    #    text3d(coords+0.5, texts=seq(1:prod(dim(data))), cex=0.75, col=txtcolor, alpha=alph)
+    text3d(coords+0.5, texts=as.vector(CELLLABELS), cex=0.75, col=txtcolor, alpha=alph)
   } # END IF
 
 } # END FUNCTION: morph3dplot
+

@@ -1,5 +1,6 @@
-morph3dlinks <-
-function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
+
+
+morph3dlinks <- function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
   
   #-------------------------------------------------------------------------------
   #
@@ -14,7 +15,7 @@ function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
   #                The object represents 3D space as an array object for R. Convention
   #                has the X for Rows, Y for Columns, and Z for either vertical or
   #                time components.
-  #  NOTES:        
+  #  NOTES:
   #
   #  REFS:
   #  FUNDING:      NSERC DG to Tarmo K. Remmel
@@ -24,11 +25,10 @@ function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
   if(VERBOSE) {
     cat("\nStarting 3D Morphological Segmentation on object: ", substitute(VOLOBJ), ".\n\n", sep="")
   }
-  
+ 
   # STORE EXPANDED ARRAY DIMENSIONS
   lrgarraydim <- dim(VOLOBJ)
-  
-  # CURRENTLY FIXED SIZE; NEED TO MAKE THIS AUTOMATIC
+
   # INITIALIZE SHIFTING ARRAYS TO ZEROS (0)
   up <- VOLOBJ * 0
   down <- VOLOBJ * 0
@@ -40,25 +40,24 @@ function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
   lrgvoxelIDS <- VOLOBJ * 0
   lrgvoxelIDS[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)] <- VOXELIDS
    
-  #SHIFT DOWN
+  # SHIFT DOWN
   down[,,2:(lrgarraydim[3]-1)] <- lrgvoxelIDS[,,3:lrgarraydim[3]]
   down <- down[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
-  
-  #SHIFT UP
+  # SHIFT UP
   up[,,2:(lrgarraydim[3]-1)] <- lrgvoxelIDS[,,1:(lrgarraydim[3]-2)]
   up <- up[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
 
-  #SHIFT LEFT
+  # SHIFT LEFT
   left[,2:(lrgarraydim[2]-1),] <- lrgvoxelIDS[,3:lrgarraydim[2],]
   left <- left[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
-  #SHIFT RIGHT
+  # SHIFT RIGHT
   right[,2:(lrgarraydim[2]-1),] <- lrgvoxelIDS[,1:(lrgarraydim[2]-2),]
   right <- right[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
 
-  #SHIFT FORWARD
+  # SHIFT FORWARD
   forward[2:(lrgarraydim[1]-1),,] <- lrgvoxelIDS[3:lrgarraydim[1],,]
   forward <- forward[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
-  #SHIFT BACKWARD
+  # SHIFT BACKWARD
   backward[2:(lrgarraydim[1]-1),,] <- lrgvoxelIDS[1:(lrgarraydim[1]-2),,]
   backward <- backward[2:(lrgarraydim[1]-1), 2:(lrgarraydim[2]-1), 2:(lrgarraydim[3]-1)]
   
@@ -72,4 +71,4 @@ function(VOLOBJ=NULL, VOXELIDS=NULL, VERBOSE=FALSE) {
   # RETURN RESULT AS A DATA FRAME
   return(new)
   
-}
+} # END FUNCTION: morph3dlinks
